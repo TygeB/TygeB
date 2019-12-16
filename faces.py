@@ -51,7 +51,7 @@ while(True):
             
         filename = datetime.datetime.now().strftime(name + ", %Y-%m-%d-%H.%M.%S.jpg")
         
-        
+        img_item = filename 
         cv2.imwrite('/nas/billeder_fra_ansigtgenkendelse/' + filename, roi_gray)
         
         
