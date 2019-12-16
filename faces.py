@@ -1,7 +1,17 @@
 import numpy as np
 import cv2
 import pickle
+import time
+import RPi.GPIO as GPIO
+import datetime
+from gpiozero import LED
+from time import sleep
 
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(18, GPIO.OUT)
+GPIO.output(18, 1)
+    
 face_cascade = cv2.CascadeClassifier('cascades/data/haarcascade_frontalface_alt2.xml')
 recognizer = cv2.face.LBPHFaceRecognizer_create()
 recognizer.read("trainner.yml")
@@ -13,6 +23,8 @@ with open("labels.pickle", 'rb') as f:
     
 cap = cv2.VideoCapture(0)
 
+
+
 while(True):
     ret, frame = cap.read()
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -23,28 +35,41 @@ while(True):
         roi_color = frame[y:y+h, x:x+w]
         
         id_, conf = recognizer.predict(roi_gray)
-        if conf>=45: #and conf <=85:
+        if conf>=60 and conf <=95:
+            print(conf)
+            GPIO.output(18, 0)
             print(id_)
             print(labels[id_])
             font = cv2.FONT_HERSHEY_SIMPLEX
             name = labels[id_]
             color = (255, 255, 255)
             stroke = 2
-            cv2.putText(frame, name, (x,y), font, 1, color, stroke, cv2.LINE_AA)
-        img_item = "my.image.png"
-        cv2.imwrite(img_item, roi_gray)
+            cv2.putText(frame, name, (x,y),font, 1, color, stroke, cv2.LINE_AA)
             
+        else:
+            GPIO.output(18, 1)
+            
+        filename = datetime.datetime.now().strftime(name + ", %Y-%m-%d-%H.%M.%S.jpg")
+        
+        
+        cv2.imwrite('/nas/billeder_fra_ansigtgenkendelse/' + filename, roi_gray)
+        
+        
         color = (255, 0, 0)
         stroke = 2
         end_cord_x = x + w
         end_cord_y = y + h 
         cv2.rectangle(frame, (x, y), (end_cord_x, end_cord_y), color, stroke)
-        
     cv2.imshow('frame',frame)
     if cv2.waitKey(20) & 0xFF == ord('q'):
+        GPIO.output(18, 1)
         break
         
         
-        
+
+
 cap.release()
 cv2.destroyAllWindows()
+
+
+
