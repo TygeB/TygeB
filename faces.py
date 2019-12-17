@@ -4,14 +4,9 @@ import pickle
 import time
 import RPi.GPIO as GPIO
 import datetime
-from gpiozero import LED
+import motor
 from time import sleep
-
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(18, GPIO.OUT)
-GPIO.output(18, 1)
-    
+   
 face_cascade = cv2.CascadeClassifier('cascades/data/haarcascade_frontalface_alt2.xml')
 recognizer = cv2.face.LBPHFaceRecognizer_create()
 recognizer.read("trainner.yml")
@@ -21,8 +16,9 @@ with open("labels.pickle", 'rb') as f:
     og_labels = pickle.load(f)
     labels = {v:k for k,v in og_labels.items()}
     
-cap = cv2.VideoCapture(0)
 
+
+cap = cv2.VideoCapture(0)
 
 
 while(True):
@@ -36,8 +32,8 @@ while(True):
         
         id_, conf = recognizer.predict(roi_gray)
         if conf>=60 and conf <=95:
+            motor.motorstart()
             print(conf)
-            GPIO.output(18, 0)
             print(id_)
             print(labels[id_])
             font = cv2.FONT_HERSHEY_SIMPLEX
@@ -46,8 +42,7 @@ while(True):
             stroke = 2
             cv2.putText(frame, name, (x,y),font, 1, color, stroke, cv2.LINE_AA)
             
-        else:
-            GPIO.output(18, 1)
+       
             
         filename = datetime.datetime.now().strftime(name + ", %Y-%m-%d-%H.%M.%S.jpg")
         
